@@ -1,0 +1,40 @@
+{
+  "BigQuery Schema": [
+    {
+      "name": "ticker",
+      "type": "STRING",
+      "mode": "REQUIRED"
+    },
+    {
+      "name": "date",
+      "type": "TIMESTAMP",
+      "mode": "REQUIRED"
+    },
+    {
+      "name": "open",
+      "type": "NUMERIC",
+    },
+    {
+      "name": "high",
+      "type": "NUMERIC",
+    },
+    {
+      "name": "low",
+      "type": "NUMERIC",
+    },
+    {
+      "name": "close",
+      "type": "NUMERIC",
+    },
+    {
+      "name": "change",
+      "type": "NUMERIC",
+      "mode": "NULLABLE"
+    },
+    {
+      "name": "variance",
+      "type": "NUMERIC",
+      "mode": "NULLABLE"
+    }
+  ]
+}

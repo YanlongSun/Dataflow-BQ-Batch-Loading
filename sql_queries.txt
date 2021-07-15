@@ -1,0 +1,79 @@
+# Basic Rounding Function
+
+UPDATE `[PROJECT-ID].[DATASET-NAME].[TABLE-NAME]`
+SET
+   open = ROUND(open, 2),
+   close = ROUND(close, 2),
+   high = ROUND(high, 2),
+   low = ROUND(low, 2)
+WHERE TRUE
+
+# Update Change and Variance
+
+UPDATE `[PROJECT-ID].[DATASET-NAME].[TABLE-NAME]`
+SET change = (SELECT close-open),
+variance = (SELECT high-low)
+WHERE TRUE
+
+# Mass Wrangling
+
+SELECT ticker, date, open, close, low, high, change, variance,
+  FIRST_VALUE(low)
+  OVER (
+      PARTITION BY ticker
+      ORDER BY date
+      ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
+    ) as previous_low,
+  FIRST_VALUE(high)
+  OVER (
+      PARTITION BY ticker
+      ORDER BY date
+      ROWS BETWEEN 1 PRECEDING AND CURRENT ROW
+    ) as previous_high,
+  ROUND(
+  AVG(close)
+    OVER (
+      PARTITION BY ticker
+      ORDER BY date
+      ROWS BETWEEN 5 PRECEDING AND CURRENT ROW
+    ), 2)
+  AS five_day_average,
+  ROUND(
+  AVG(close)
+    OVER (
+      PARTITION BY ticker
+      ORDER BY date
+      ROWS BETWEEN 15 PRECEDING AND CURRENT ROW
+    ), 2)
+  AS fifteen_day_average,
+  MIN(low)
+  OVER (
+      PARTITION BY ticker
+      ORDER BY date
+      ROWS BETWEEN 15 PRECEDING AND 5 PRECEDING
+    ) as support,
+  MAX(high)
+  OVER (
+      PARTITION BY ticker
+      ORDER BY date
+      ROWS BETWEEN 15 PRECEDING AND 5 PRECEDING
+    ) as resistance,
+  FROM `[PROJECT-ID].[DATASET-NAME].[TABLE-NAME]`
+
+# Get Analysis Metrics
+
+SELECT ticker, date, five_day_average,
+fifteen_day_average, support, resistance,
+(five_day_average - fifteen_day_average) AS trend_direction,
+(low = support) AS lower_support,
+(high = resistance) AS higher_resistance,
+FROM `[PROJECT-ID].[DATASET-NAME].[TABLE2-NAME]`
+
+# Get ML Data
+
+SELECT date,
+  max(CASE WHEN ticker = 'FMAT' then trend_direction end) FMAT_direction,
+  max(CASE WHEN ticker = 'FENY' then trend_direction end) FENY_direction,
+  max(CASE WHEN ticker = 'FIDU' then trend_direction end) FIDU_direction,
+from `[PROJECT-ID].[DATASET-NAME].[TABLE3-NAME]` 
+group by date
